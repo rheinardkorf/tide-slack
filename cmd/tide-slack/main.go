@@ -35,7 +35,7 @@ func handleTideCommand(w http.ResponseWriter, r *http.Request) {
 	slackApi := slack.New(token)
 	slackApi.PostMessage( sCmd.ChannelID, "oh, hai", slack.PostMessageParameters{})
 
-	fmt.Fprintf(w, "/tide handler: " + sCmd.TeamDomain )
+	//fmt.Fprintf(w, "/tide handler: " + sCmd.TeamDomain )
 }
 
 func main() {
