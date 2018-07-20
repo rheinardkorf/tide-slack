@@ -2,28 +2,24 @@ package main
 
 import (
 	"log"
-	"net/http"
-	"os"
-
-	"github.com/gin-gonic/gin"
 	_ "github.com/heroku/x/hmetrics/onload"
+	"net/http"
+	"fmt"
 )
 
+func handleOauth(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "oAuth Handler")
+}
+
+func handleTideCommand(w http.ResponseWriter, r *http.Request) {
+	fmt.Fprintf(w, "/tide handler")
+}
+
 func main() {
-	port := os.Getenv("PORT")
-
-	if port == "" {
-		log.Fatal("$PORT must be set")
-	}
-
-	router := gin.New()
-	router.Use(gin.Logger())
-	router.LoadHTMLGlob("templates/*.tmpl.html")
-	router.Static("/static", "static")
-
-	router.GET("/", func(c *gin.Context) {
-		c.HTML(http.StatusOK, "index.tmpl.html", nil)
+	http.HandleFunc("/oauth", handleOauth)
+	http.HandleFunc("/tide", handleTideCommand)
+	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
+		fmt.Fprintf(w, "Nothing to see here.")
 	})
-
-	router.Run(":" + port)
+	log.Fatal(http.ListenAndServe(":5000", nil))
 }
