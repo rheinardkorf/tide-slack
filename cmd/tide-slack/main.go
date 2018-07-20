@@ -5,6 +5,7 @@ import (
 	_ "github.com/heroku/x/hmetrics/onload"
 	"net/http"
 	"fmt"
+	"os"
 )
 
 func handleOauth(w http.ResponseWriter, r *http.Request) {
@@ -16,10 +17,13 @@ func handleTideCommand(w http.ResponseWriter, r *http.Request) {
 }
 
 func main() {
+
+	port := os.Getenv("PORT")
+
 	http.HandleFunc("/oauth", handleOauth)
 	http.HandleFunc("/tide", handleTideCommand)
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Nothing to see here.")
 	})
-	log.Fatal(http.ListenAndServe(":", nil))
+	log.Fatal(http.ListenAndServe(":"+port, nil))
 }
