@@ -12,6 +12,7 @@ import (
 var (
 	token = os.Getenv("TOKEN")
 	teamDomain = os.Getenv("TEAM")
+	environment = os.Getenv("ENVIRONMENT")
 )
 
 func handleOauth(w http.ResponseWriter, r *http.Request) {
@@ -20,20 +21,21 @@ func handleOauth(w http.ResponseWriter, r *http.Request) {
 
 func handleTideCommand(w http.ResponseWriter, r *http.Request) {
 
-	//s := slack.New(token)
-	s, err := slack.SlashCommandParse(r)
+	sCmd, err := slack.SlashCommandParse(r)
 	if err != nil {
 		w.WriteHeader(http.StatusInternalServerError)
 		return
 	}
-	//
-	//if !s.ValidateToken(token) {
-		//w.WriteHeader(http.StatusUnauthorized)
-		//fmt.Fprintf(w, "awwwww" )
-		//return
-	//}
 
-	fmt.Fprintf(w, "/tide handler: " + s.TeamDomain )
+	if sCmd.TeamDomain != teamDomain && environment != "debug" {
+		w.WriteHeader(http.StatusUnauthorized)
+		return
+	}
+
+	slackApi := slack.New(token)
+	slackApi.PostMessage( sCmd.ChannelID, "oh, hai", slack.PostMessageParameters{})
+
+	fmt.Fprintf(w, "/tide handler: " + sCmd.TeamDomain )
 }
 
 func main() {
