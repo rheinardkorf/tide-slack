@@ -1,12 +1,11 @@
 {
-  "name": "Start on Heroku: Go",
-  "description": "Go Getting Started Example App",
+  "name": "WPTide Slack",
+  "description": "A Slack integration for wptide.org.",
   "keywords": [
-    "getting-started",
-    "go",
-    "sample",
-    "example"
+    "tide",
+    "slack",
+    "go"
   ],
-  "website": "http://github.com/heroku/go-getting-started",
-  "repository": "http://github.com/heroku/go-getting-started"
+  "website": "http://github.com/rheinardkorf/tide-slack",
+  "repository": "http://github.com/rheinardkorf/tide-slack"
 }
