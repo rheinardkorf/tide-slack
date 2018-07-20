@@ -7,19 +7,24 @@ import (
 	"fmt"
 	"os"
 	"github.com/nlopes/slack"
+	"github.com/wptide/pkg/tide/api"
+	"github.com/wptide/pkg/env"
+	"github.com/wptide/pkg/tide"
 )
 
 var (
-	token = os.Getenv("TOKEN")
-	teamDomain = os.Getenv("TEAM")
-	environment = os.Getenv("ENVIRONMENT")
+	token                            = os.Getenv("TOKEN")
+	teamDomain                       = os.Getenv("TEAM")
+	environment                      = os.Getenv("ENVIRONMENT")
+	slackApi                         = slack.New(token)
+	tideClient  tide.ClientInterface = &api.Client{}
 )
 
 func handleOauth(w http.ResponseWriter, r *http.Request) {
 	fmt.Fprintf(w, "oAuth Handler")
 }
 
-func handleTideCommand(w http.ResponseWriter, r *http.Request) {
+func handleSlashCommand(w http.ResponseWriter, r *http.Request) {
 
 	sCmd, err := slack.SlashCommandParse(r)
 	if err != nil {
@@ -32,20 +37,42 @@ func handleTideCommand(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	slackApi := slack.New(token)
-	slackApi.PostMessage( sCmd.ChannelID, "oh, hai", slack.PostMessageParameters{})
-
-	//fmt.Fprintf(w, "/tide handler: " + sCmd.TeamDomain )
+	switch sCmd.Command {
+	case "/tide":
+		hnd := &tideCommand{&sCmd, slackApi, tideClient}
+		hnd.handle(w, r)
+	default:
+		w.WriteHeader(http.StatusInternalServerError)
+		return
+	}
 }
 
 func main() {
 
 	port := os.Getenv("PORT")
+	conf := getConfig()["tide"]
+
+	if err := tideClient.Authenticate(conf["key"], conf["secret"], conf["auth"]); err != nil {
+		log.Fatal(err)
+	}
 
 	http.HandleFunc("/oauth", handleOauth)
-	http.HandleFunc("/tide", handleTideCommand)
+	http.HandleFunc("/tide", handleSlashCommand)
 	http.HandleFunc("/", func(w http.ResponseWriter, r *http.Request) {
 		fmt.Fprintf(w, "Nothing to see here.")
 	})
 	log.Fatal(http.ListenAndServe(":"+port, nil))
+}
+
+func getConfig() map[string]map[string]string {
+	return map[string]map[string]string{
+		"tide": {
+			"key":      env.GetEnv("API_KEY", ""),
+			"secret":   env.GetEnv("API_SECRET", ""),
+			"auth":     env.GetEnv("API_AUTH_URL", ""),
+			"host":     env.GetEnv("API_HTTP_HOST", ""),
+			"protocol": env.GetEnv("API_PROTOCOL", ""),
+			"version":  env.GetEnv("API_VERSION", ""),
+		},
+	}
 }
