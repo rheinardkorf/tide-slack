@@ -55,13 +55,13 @@ func (h *tideCommand) handle(w http.ResponseWriter, r *http.Request) {
 
 			results := make(map[string]interface{})
 
-			var err error
+			var err, jsonErr error
 
 			if h.clientEnabled {
 				// Use Tide client.
 				response, errClient := h.tideApi.SendPayload("GET", endpoint, "")
 				err = errClient
-				json.Unmarshal([]byte(response),&results)
+				jsonErr = json.Unmarshal([]byte(response),&results)
 			} else {
 				// Grab from public accessible data.
 				resp, errGet := http.Get( endpoint )
@@ -69,13 +69,18 @@ func (h *tideCommand) handle(w http.ResponseWriter, r *http.Request) {
 
 				if errGet == nil {
 					bBody, _ := ioutil.ReadAll( resp.Body )
-					json.Unmarshal(bBody,&results)
+					jsonErr = json.Unmarshal(bBody,&results)
 				}
 				err = errGet
 			}
 
 			if err != nil {
 				h.client.PostMessage(h.slash.ChannelID, err.Error(), slack.PostMessageParameters{})
+				return;
+			}
+
+			if jsonErr != nil {
+				h.client.PostMessage(h.slash.ChannelID, jsonErr.Error(), slack.PostMessageParameters{})
 				return;
 			}
 
