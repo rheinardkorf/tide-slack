@@ -94,6 +94,11 @@ func (h *tideCommand) handle(w http.ResponseWriter, r *http.Request) {
 				projectTitle = results["title"].(string)
 			}
 
+			if results["reports"] != nil {
+				h.client.PostMessage(h.slash.ChannelID, "No reports for: " + projectTitle, slack.PostMessageParameters{})
+				return
+			}
+
 			// Add theme/plugin info.
 			params.Attachments = append(params.Attachments, slack.Attachment{
 				Color: "#0B35F5",
