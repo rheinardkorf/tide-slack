@@ -177,7 +177,7 @@ func (h *tideCommand) handle(w http.ResponseWriter, r *http.Request) {
 					for catId, category := range lighthouseCategories {
 						cat := category.(map[string]interface{})
 						catScore := cat["score"].(float64)
-						scores[catId] = catScore
+						scores[catId] = catScore * 100.0
 					}
 
 					fields := []slack.AttachmentField {
