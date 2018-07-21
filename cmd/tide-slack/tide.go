@@ -83,10 +83,16 @@ func (h *tideCommand) handle(w http.ResponseWriter, r *http.Request) {
 				Markdown: true,
 			}
 
+			projectTitle := slug
+
+			if results["title"] != nil {
+				projectTitle = results["title"].(string)
+			}
+
 			// Add theme/plugin info.
 			params.Attachments = append(params.Attachments, slack.Attachment{
 				Color: "#0B35F5",
-				Title: strings.Title( command ) + ": " + results["title"].(string),
+				Title: strings.Title( command ) + ": " + projectTitle,
 			} )
 
 			// Add phpcs_wordpress
