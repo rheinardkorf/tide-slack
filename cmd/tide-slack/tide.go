@@ -95,7 +95,8 @@ func (h *tideCommand) handle(w http.ResponseWriter, r *http.Request) {
 			}
 
 			if results["reports"] == nil {
-				h.client.PostMessage(h.slash.ChannelID, "No reports for: " + projectTitle, slack.PostMessageParameters{})
+				w.Write([]byte("No reports for: " + projectTitle))
+				//h.client.PostMessage(h.slash.ChannelID, "No reports for: " + projectTitle, slack.PostMessageParameters{})
 				return
 			}
 
