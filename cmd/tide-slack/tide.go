@@ -12,10 +12,10 @@ import (
 )
 
 type tideCommand struct {
-	slash   *slack.SlashCommand
-	client  *slack.Client
-	tideApi tide.ClientInterface
-	baseUrl string
+	slash         *slack.SlashCommand
+	client        *slack.Client
+	tideApi       tide.ClientInterface
+	baseUrl       string
 	clientEnabled bool
 }
 
@@ -61,15 +61,15 @@ func (h *tideCommand) handle(w http.ResponseWriter, r *http.Request) {
 				// Use Tide client.
 				response, errClient := h.tideApi.SendPayload("GET", endpoint, "")
 				err = errClient
-				jsonErr = json.Unmarshal([]byte(response),&results)
+				jsonErr = json.Unmarshal([]byte(response), &results)
 			} else {
 				// Grab from public accessible data.
-				resp, errGet := http.Get( endpoint )
+				resp, errGet := http.Get(endpoint)
 				defer resp.Body.Close()
 
 				if errGet == nil {
-					bBody, _ := ioutil.ReadAll( resp.Body )
-					jsonErr = json.Unmarshal(bBody,&results)
+					bBody, _ := ioutil.ReadAll(resp.Body)
+					jsonErr = json.Unmarshal(bBody, &results)
 				}
 				err = errGet
 			}
@@ -95,16 +95,24 @@ func (h *tideCommand) handle(w http.ResponseWriter, r *http.Request) {
 			}
 
 			if results["reports"] == nil {
-				w.Write([]byte("No reports for: " + projectTitle))
-				//h.client.PostMessage(h.slash.ChannelID, "No reports for: " + projectTitle, slack.PostMessageParameters{})
+				h.client.PostMessage(h.slash.ChannelID, "", slack.PostMessageParameters{
+					Attachments: []slack.Attachment{
+						{
+							Footer: "No reports for: " + projectTitle,
+						},
+						{
+							Footer: "Results powered by wptide.org\nRequested by @" + h.slash.UserName,
+						},
+					},
+				})
 				return
 			}
 
 			// Add theme/plugin info.
 			params.Attachments = append(params.Attachments, slack.Attachment{
 				Color: "#0B35F5",
-				Title: strings.Title( command ) + ": " + projectTitle,
-			} )
+				Title: strings.Title(command) + ": " + projectTitle,
+			})
 
 			// Add phpcs_wordpress
 			if results["reports"].(map[string]interface{})["phpcs_phpcompatibility"] != nil &&
@@ -116,9 +124,9 @@ func (h *tideCommand) handle(w http.ResponseWriter, r *http.Request) {
 
 					params.Attachments = append(params.Attachments, slack.Attachment{
 						Color: "#3C91E6",
-						Text: "Audit resulted in errors.",
+						Text:  "Audit resulted in errors.",
 						Title: "PHPCS: WordPress",
-					} )
+					})
 
 				} else {
 					summary := phpcsWordPress["summary"].(map[string]interface{})
@@ -197,7 +205,7 @@ func (h *tideCommand) handle(w http.ResponseWriter, r *http.Request) {
 						scores[catId] = catScore * 100.0
 					}
 
-					fields := []slack.AttachmentField {
+					fields := []slack.AttachmentField{
 						{
 							Title: "PWA",
 							Value: fmt.Sprintf("%.0f", scores["pwa"]),
@@ -221,21 +229,21 @@ func (h *tideCommand) handle(w http.ResponseWriter, r *http.Request) {
 					}
 
 					params.Attachments = append(params.Attachments, slack.Attachment{
-						Color: "#fbb30b",
-						Title: "Lighthouse Audit",
-						Fields: fields,
-						Footer: "Powered by Google Lighthouse",
+						Color:      "#fbb30b",
+						Title:      "Lighthouse Audit",
+						Fields:     fields,
+						Footer:     "Powered by Google Lighthouse",
 						FooterIcon: "https://developers.google.com/web/tools/lighthouse/images/lighthouse-icon-128.png",
-					} )
+					})
 				}
 			}
 
-				// Add "Requested by".
+			// Add "Requested by".
 			params.Attachments = append(params.Attachments, slack.Attachment{
 				//Color: "#9F43E0",
 				Footer: "Results powered by wptide.org\nRequested by @" + h.slash.UserName,
 				//Ts: json.Number(time.Now().String()),
-			} )
+			})
 
 			h.client.PostMessage(h.slash.ChannelID, " ", params)
 		}()
