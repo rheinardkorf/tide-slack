@@ -89,9 +89,14 @@ func (h *tideCommand) handle(w http.ResponseWriter, r *http.Request) {
 			}
 
 			projectTitle := slug
+			projectVersion := version
 
 			if results["title"] != nil {
 				projectTitle = results["title"].(string)
+			}
+
+			if results["version"] != nil {
+				projectVersion = results["version"].(string)
 			}
 
 			if results["reports"] == nil {
@@ -112,6 +117,7 @@ func (h *tideCommand) handle(w http.ResponseWriter, r *http.Request) {
 			params.Attachments = append(params.Attachments, slack.Attachment{
 				Color: "#0B35F5",
 				Title: strings.Title(command) + ": " + projectTitle,
+				Footer: "Version: " + projectVersion,
 			})
 
 			// Add phpcs_wordpress
